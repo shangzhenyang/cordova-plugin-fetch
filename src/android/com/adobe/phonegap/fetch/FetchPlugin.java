@@ -5,12 +5,14 @@ import android.util.Log;
 
 import okhttp3.Callback;
 import okhttp3.Headers;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.Call;
+import okhttp3.dnsoverhttps.DnsOverHttps;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -20,6 +22,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class FetchPlugin extends CordovaPlugin {
@@ -27,7 +30,14 @@ public class FetchPlugin extends CordovaPlugin {
     public static final String LOG_TAG = "FetchPlugin";
     private static CallbackContext callbackContext;
 
-    private OkHttpClient mClient = new OkHttpClient();
+    private OkHttpClient mClient = new OkHttpClient.Builder()
+        .dns(
+            new DnsOverHttps.Builder()
+                .client(new OkHttpClient())
+                .url(Objects.requireNonNull(HttpUrl.parse("https://dns.alidns.com/dns-query")))
+                .build()
+        )
+        .build();
     public static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
 
     private static final long DEFAULT_TIMEOUT = 10;
@@ -147,7 +157,7 @@ public class FetchPlugin extends CordovaPlugin {
                 callbackContext.error(e.getMessage());
             }
 
-        } 
+        }
         else if (action.equals("setTimeout")) {
             this.setTimeout(data.optLong(0, DEFAULT_TIMEOUT));
         }
